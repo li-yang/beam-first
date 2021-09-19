@@ -1,0 +1,23 @@
+### Exam sum up:
+- Reference Architectures: Big Data
+  - Reference Architectures:https://showcase.withgoogle.com/solutions-architecture/solution/data_warehouse_modernization
+  - https://github.com/platformercloud/gcp-cloud-architect
+  - Top 13 Google Cloud reference Architectures: https://medium.com/google-cloud/top-13-google-cloud-reference-architectures-c8a697546505
+- Reference Architectures: AI & Machine Learning
+- Reference Architectures: Internet of Things
+  - https://showcase.withgoogle.com/solutions-architecture/solution/iot_mqtt_bridge
+  - https://showcase.withgoogle.com/solutions-architecture/solution/cloud_to_edge_ml
+- Reference Architectures: Mobile & Gaming
+  - https://showcase.withgoogle.com/solutions-architecture/solution/game_database_backend
+  - https://agones.dev/site/docs/overview/
+  - https://showcase.withgoogle.com/solutions-architecture/solution/gaming_analytics
+  - https://showcase.withgoogle.com/solutions-architecture/solution/optimizing_large_scale_analytics
+- Further Readings & Resources(Optional for exam, more as interest)
+  - Visualizing GCP Billing using BigQuery and Data Studio: https://medium.com/google-cloud/visualize-gcp-billing-using-bigquery-and-data-studio-d3e695f90c08
+  - TensorFlow 2 Quickstart Tutorial: https://www.tensorflow.org/tutorials/quickstart/beginner
+  - AutoML Vision API Tutorial: https://www.tensorflow.org/tutorials/quickstart/beginner
+  - Applied Machine Learning with BigQuery (ACG): 
+  - Python for Beginners (ACG)
+  - Introduction to Jupyter Notebooks (ACG)
+### Exam Guide Breakdown
+- Domain 1: Designing Data Processing Systems
