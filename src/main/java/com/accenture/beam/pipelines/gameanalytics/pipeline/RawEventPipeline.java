@@ -45,14 +45,14 @@ public class RawEventPipeline {
      * Provides an interface for setting the GCS temp location and streaming mode
      */
     public interface MyOptions extends DataflowPipelineOptions {
-        @Description("The Avro saved location. Must end with /")
-        @Validation.Required
-        ValueProvider<String> getAvroGcsLocation();
-        void setAvroGcsLocation();
+//        @Description("The Avro saved location. Must end with /")
+//        @Validation.Required
+//        ValueProvider<String> getAvroGcsLocation();
+//        void setAvroGcsLocation();
 
-        @Description("PubSub topic to read the input from")
-        ValueProvider<String> getInputTopic();
-        void setInputTopic(ValueProvider<String> value);
+//        @Description("PubSub topic to read the input from")
+//        ValueProvider<String> getInputTopic();
+//        void setInputTopic(ValueProvider<String> value);
 
     }
 
@@ -70,6 +70,8 @@ public class RawEventPipeline {
      */
     public static void run(MyOptions options) {
         Pipeline pipeline = Pipeline.create(options);
+
+        String topic = "projects/" + options.getProject() + "/topics/raw-events";
 
         // event schema for the raw_events table
         List<TableFieldSchema> fields = new ArrayList<>();
@@ -103,7 +105,7 @@ public class RawEventPipeline {
                  * Step #1: Read messages in from Kafka
                  */
                 .apply("Read PubSub Events",
-                        PubsubIO.readMessages().fromTopic(options.getInputTopic()));
+                        PubsubIO.readMessages().fromTopic(topic));
         /*
          * Step #2: stream the events to Big Query
          */
