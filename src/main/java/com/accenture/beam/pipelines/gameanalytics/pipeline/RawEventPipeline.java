@@ -5,6 +5,7 @@ import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.gson.JsonParser;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
@@ -40,33 +41,19 @@ public class RawEventPipeline {
 
     private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-
     /**
      * Provides an interface for setting the GCS temp location and streaming mode
      */
-    public interface MyOptions extends PipelineOptions, StreamingOptions {
-        @Description("The Avro Write Temporary Directory. Must end with /")
-        @Validation.Required
-        ValueProvider<String> getAvroTempDirectory();
-
-        void setAvroTempDirectory(ValueProvider<String> value);
-
+    public interface MyOptions extends DataflowPipelineOptions {
         @Description("The Avro saved location. Must end with /")
         @Validation.Required
         ValueProvider<String> getAvroGcsLocation();
-
         void setAvroGcsLocation();
 
         @Description("PubSub topic to read the input from")
         ValueProvider<String> getInputTopic();
-
         void setInputTopic(ValueProvider<String> value);
 
-        @Description("Your project Id")
-        @Validation.Required
-        ValueProvider<String> getProjectId();
-
-        void setProjectId();
     }
 
     public static void main(String[] args) {
@@ -95,10 +82,9 @@ public class RawEventPipeline {
 
         // BQ output table information
         TableReference table = new TableReference();
-        table.setProjectId(options.getProjectId().get());
+        table.setProjectId(options.getProject());
         table.setDatasetId("tracking");
         table.setTableId("raw_events");
-
 
         /*
          * Steps:
@@ -191,7 +177,7 @@ public class RawEventPipeline {
             record.set("eventType", eventType);
             record.set("eventVersion", eventVersion);
             record.set("serverTime", serverTime);
-            record.set("messsage", message);
+            record.set("message", message);
 
             out.output(record);
         }
