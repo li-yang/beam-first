@@ -57,13 +57,13 @@ public class TrackingAPI implements ApiFutureCallback<String> {
             trackingAPI.stop();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            Publisher publisher = trackingAPI.getPublisher();
-            if (publisher != null) {
-                // When finished with the publisher, shutdown to free up resources.
-                trackingAPI.stop();
-                publisher.awaitTermination(1, TimeUnit.MINUTES);
-            }
+//        } finally {
+//            Publisher publisher = trackingAPI.getPublisher();
+//            if (publisher != null) {
+//                // When finished with the publisher, shutdown to free up resources.
+//                trackingAPI.stop();
+//                publisher.awaitTermination(1, TimeUnit.MINUTES);
+//            }
         }
     }
 

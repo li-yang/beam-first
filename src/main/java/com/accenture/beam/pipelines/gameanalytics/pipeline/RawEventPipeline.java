@@ -15,9 +15,7 @@ import org.apache.beam.sdk.options.*;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
-import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.transforms.windowing.*;
 import org.apache.beam.sdk.values.PCollection;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -45,14 +43,14 @@ public class RawEventPipeline {
      * Provides an interface for setting the GCS temp location and streaming mode
      */
     public interface MyOptions extends DataflowPipelineOptions {
-//        @Description("The Avro saved location. Must end with /")
-//        @Validation.Required
-//        ValueProvider<String> getAvroGcsLocation();
-//        void setAvroGcsLocation();
+        @Description("Table spec to write the output to")
+        ValueProvider<String> getOutputTableSpec();
 
-//        @Description("PubSub topic to read the input from")
-//        ValueProvider<String> getInputTopic();
-//        void setInputTopic(ValueProvider<String> value);
+        void setOutputTableSpec(ValueProvider<String> value);
+
+        @Description("PubSub topic to read the input from")
+        ValueProvider<String> getInputTopic();
+        void setInputTopic(ValueProvider<String> value);
 
     }
 
@@ -71,7 +69,7 @@ public class RawEventPipeline {
     public static void run(MyOptions options) {
         Pipeline pipeline = Pipeline.create(options);
 
-        String topic = "projects/" + options.getProject() + "/topics/raw-events";
+//        String topic = "projects/" + options.getProject() + "/topics/raw-events";
 
         // event schema for the raw_events table
         List<TableFieldSchema> fields = new ArrayList<>();
@@ -83,10 +81,10 @@ public class RawEventPipeline {
         TableSchema schema = new TableSchema().setFields(fields);
 
         // BQ output table information
-        TableReference table = new TableReference();
-        table.setProjectId(options.getProject());
-        table.setDatasetId("tracking");
-        table.setTableId("raw_events");
+//        TableReference table = new TableReference();
+//        table.setProjectId(options.getProject());
+//        table.setDatasetId("tracking");
+//        table.setTableId("raw_events");
 
         /*
          * Steps:
@@ -105,7 +103,7 @@ public class RawEventPipeline {
                  * Step #1: Read messages in from Kafka
                  */
                 .apply("Read PubSub Events",
-                        PubsubIO.readMessages().fromTopic(topic));
+                        PubsubIO.readMessages().fromTopic(options.getInputTopic()));
         /*
          * Step #2: stream the events to Big Query
          */
@@ -113,7 +111,7 @@ public class RawEventPipeline {
                 .apply("ConvertMessageToTableRow", new MessageToTableRow(options))
                 .apply("ToBigQuery",
                         BigQueryIO.writeTableRows()
-                                .to(table)
+                                .to(options.getOutputTableSpec())
                                 .withSchema(schema)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
@@ -129,16 +127,20 @@ public class RawEventPipeline {
                  */
                 .apply("BatchEvents", Window.<String>into(
                                 FixedWindows.of(Duration.standardMinutes(5)))
-                        .triggering(AfterWatermark.pastEndOfWindow())
-                        .discardingFiredPanes()
-                        .withAllowedLateness(Duration.standardMinutes(5))
+                        .triggering(AfterWatermark
+                                .pastEndOfWindow()
+                                .withLateFirings(AfterProcessingTime
+                                        .pastFirstElementInPane()
+                                        .plusDelayOf(Duration.standardMinutes(10))))
+                        .withAllowedLateness(Duration.standardDays(2))
+                        .accumulatingFiredPanes()
                 )
                 /*
                  *  Save the events in ARVO format
                  */
                 .apply("ToAvro",
                         AvroIO.write(String.class)
-                                .to(options.getAvroGcsLocation() + avroFile)
+                                .to(options.getTempLocation() + avroFile)
                                 .withWindowedWrites()
                                 .withNumShards(8)
                                 .withSuffix(".avro")
